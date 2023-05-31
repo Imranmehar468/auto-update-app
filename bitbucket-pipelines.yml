@@ -1,0 +1,29 @@
+image: atlassian/default-image:2
+
+pipelines:
+  default:
+    - step:
+        name: Build and Deploy
+        image: ubuntu
+        script:
+          # Install Node.js dependencies
+          - apt-get update && apt-get install -y curl
+          - curl -sL https://deb.nodesource.com/setup_16.x | bash -
+          - apt-get install -y nodejs
+
+          # Build your project (replace with your build commands)
+          - npm install --force
+          - npm run dist
+        artifacts:
+          - dist/*
+    - step:
+        name: Deploy to S3
+        deployment: production  # Update the environment name here
+        script:
+          - pipe: atlassian/aws-s3-deploy:0.4.2
+            variables:
+              AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+              AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+              AWS_DEFAULT_REGION: 'us-east-1'
+              S3_BUCKET: 'hello-world-electron'
+              LOCAL_PATH: 'dist'
